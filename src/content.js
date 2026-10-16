@@ -280,7 +280,7 @@
 
   // State of the dialog. Kept while a job runs, so the user can close and reopen it.
   const st = {
-    seq: 0, running: false, ctx: null, commits: [], repo: null, settings: null,
+    seq: 0, running: false, ctx: null, commits: [], repo: null, settings: null, prBase: null,
     branchEdited: false, titleEdited: false, branchesFor: "", branchCache: new Map(), branchTimer: 0
   };
 
@@ -390,6 +390,7 @@
     if (seq !== st.seq) return;
     if (!sres.ok) return setStatus(sres.error.message, true);
     if (!sres.session) return showLogin(`Log in to ${HOST} to cherry-pick.`);
+    st.publicOnly = !(sres.session.scopes || []).includes("repo");
 
     const source = { owner: ctx.owner, repo: ctx.repo };
     const [settings, rres, commits] = await Promise.all([
@@ -401,18 +402,25 @@
     st.settings = settings;
     st.repo = rres.ok ? rres.repo : null;
     st.commits = commits.list;
+    // On a PR page, the PR's base branch is the most likely target.
+    st.prBase = ctx.number ? commits.base || null : null;
 
     const preselected = ctx.mode === "commit" ? [ctx.sha] : ctx.selected;
     fillCommitList(orderSelected(st.commits, preselected));
     $("#cp-trailer").checked = settings.trailer;
     $("[data-action=parent]").hidden = !(st.repo && st.repo.parent);
-    setTarget(thisRepoTarget());
+    setTarget(st.prBase || thisRepoTarget());
     $(".cp-main").hidden = false;
     $("[data-action=ok]").hidden = false;
 
     const notes = [];
     if (commits.note) notes.push(commits.note);
-    if (!st.repo) notes.push("Could not read the repo data. Type the target branch.");
+    if (!st.repo) {
+      const why = rres.error ? ` (${rres.error.code}: ${rres.error.message})` : "";
+      const hint = st.publicOnly && rres.error && rres.error.code === "not_found"
+        ? " If this repo is private, select \"Public and private repositories\" in the settings and log in again." : "";
+      notes.push(`Could not read the repo data${why}. Type the target branch.${hint}`);
+    }
     setStatus(notes.join(" "), notes.length > 0);
     validate();
     const first = $(".cp-commit-list input:not(:disabled)") || $("#cp-target");
@@ -433,7 +441,7 @@
       if (res.ok && res.commits.length) {
         const list = res.commits.map((c) => ({ sha: c.sha.toLowerCase(), message: c.message, parents: c.parents || [] }));
         if (ctx.mode === "commit" && !orderSelected(list, [ctx.sha]).length) list.push(commitFromDom(ctx.sha));
-        return { list };
+        return { list, base: res.base || null };
       }
       if (ctx.mode === "pull") {
         const list = domCommits();
@@ -725,6 +733,8 @@
         break;
       case "not_found":
         text = `${error.message && d.sha ? error.message : "Repository, branch or commit not found."} Check the target and your access.`;
+        // GitHub answers 404, not 403, for a private repo the token cannot read.
+        if (st.publicOnly) text += " Your login has access to public repos only. For private repos, select \"Public and private repositories\" in the settings and log in again.";
         break;
       case "rate_limited":
         text = "GitHub API rate limit reached. Wait a few minutes, then try again.";

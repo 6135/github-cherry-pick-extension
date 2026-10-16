@@ -7,7 +7,8 @@
 //   { type: "repoInfo", host, owner, repo }           → { repo: { fullName, fork, defaultBranch,
 //                                                         parent: {owner, repo, defaultBranch} | null, canPush } }
 //   { type: "branches", host, owner, repo }           → { branches: ["main", ...] } (up to 1000)
-//   { type: "pullCommits", host, owner, repo, number } → { commits: [{ sha, message, parents }] } (oldest first)
+//   { type: "pullCommits", host, owner, repo, number } → { commits: [{ sha, message, parents }] (oldest first),
+//                                                         base: { owner, repo, branch } }
 //   { type: "commit", host, owner, repo, sha }        → { commit: { sha, message, parents } }
 //
 // Long job (chrome.runtime.connect({ name: "pick" })). The open port keeps the worker alive.
@@ -89,9 +90,15 @@ const HANDLERS = {
 
   async pullCommits(msg) {
     const client = await clientFor(hostOf(msg));
-    const list = await client.paginate(
-      `/repos/${enc(msg.owner)}/${enc(msg.repo)}/pulls/${Number(msg.number)}/commits?per_page=100`, { maxPages: 3 });
-    return { commits: list.map((c) => ({ sha: c.sha, message: c.commit.message, parents: c.parents.map((p) => p.sha) })) };
+    const pull = `/repos/${enc(msg.owner)}/${enc(msg.repo)}/pulls/${Number(msg.number)}`;
+    const [pr, list] = await Promise.all([
+      client.get(pull),
+      client.paginate(`${pull}/commits?per_page=100`, { maxPages: 3 })
+    ]);
+    return {
+      commits: list.map((c) => ({ sha: c.sha, message: c.commit.message, parents: c.parents.map((p) => p.sha) })),
+      base: { owner: pr.base.repo.owner.login, repo: pr.base.repo.name, branch: pr.base.ref }
+    };
   }
 };
 
