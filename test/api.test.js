@@ -38,3 +38,19 @@ test("paginate follows next links", async () => {
   assert.deepEqual(await c.paginate("/l"), [1, 2, 3]);
   assert.equal(nextLink('<a>; rel="prev", <b>; rel="next"'), "b");
 });
+
+test("token goes only to the API origin", async () => {
+  let called = 0;
+  const c = createClient({ apiBase: "https://api.x", token: "t", fetchImpl: async () => { called++; return res(200, []); } });
+  await assert.rejects(c.get("https://evil.example/steal"), (e) => e.code === "bad_url");
+  const pages = createClient({ apiBase: "https://api.x", token: "t",
+    fetchImpl: async () => { called++; return res(200, [1], { link: '<https://evil.example/l?page=2>; rel="next"' }); } });
+  await assert.rejects(pages.paginate("/l"), (e) => e.code === "bad_url");
+  assert.equal(called, 1, "only the first page is fetched");
+});
+
+test("SSO url must be https", async () => {
+  const c = createClient({ apiBase: "https://api.x", token: "t",
+    fetchImpl: async () => res(403, { message: "SSO" }, { "x-github-sso": "required; url=javascript:alert(1)" }) });
+  await assert.rejects(c.get("/x"), (e) => e.status === 403 && e.ssoUrl === null);
+});

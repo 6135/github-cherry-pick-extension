@@ -253,7 +253,7 @@
       throw codeError("bad_response", `${h} sent an answer without a device code.`);
     }
     // Use only an https URL. Else use the standard device page of the host.
-    const uri = /^https:\/\//i.test(String(data.verification_uri || "")) ? data.verification_uri : `${L.webBase(h)}/login/device`;
+    const uri = sameOrigin(data.verification_uri, L.webBase(h)) ? data.verification_uri : `${L.webBase(h)}/login/device`;
     return {
       device_code: String(data.device_code),
       user_code: String(data.user_code),
@@ -261,6 +261,11 @@
       expires_in: Number(data.expires_in) > 0 ? Number(data.expires_in) : 900,
       interval: Number(data.interval) > 0 ? Number(data.interval) : 5
     };
+  }
+
+  // True when url is on the same origin as base. Stops a bad answer from sending the user elsewhere.
+  function sameOrigin(url, base) {
+    try { return new URL(String(url)).origin === new URL(base).origin; } catch (_) { return false; }
   }
 
   function defaultSleep(ms, signal) {

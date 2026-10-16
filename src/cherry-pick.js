@@ -68,6 +68,22 @@
     const targetInfo = await client.get(repoPath(target));
     const headRepo = await findHeadRepo(client, host, target, targetInfo, req.login);
 
+    // 2b. Private code must not go to a public repo by mistake.
+    // The new branch and its commits are visible even if nobody opens the PR.
+    if (!L.sameRepo(source, target) || !L.sameRepo(source, headRepo)) {
+      const sourceInfo = L.sameRepo(source, target) ? targetInfo : await client.get(repoPath(source));
+      const headInfo = L.sameRepo(headRepo, target) ? targetInfo : await client.get(repoPath(headRepo));
+      const publicRepos = [[target, targetInfo], [headRepo, headInfo]]
+        .filter(([, info]) => info && info.private === false)
+        .map(([r]) => `${r.owner}/${r.repo}`)
+        .filter((name, i, all) => all.indexOf(name) === i);
+      if (sourceInfo && sourceInfo.private && publicRepos.length && req.allowPublic !== true) {
+        throw codeError("private_to_public",
+          `${source.owner}/${source.repo} is private, but ${publicRepos.join(" and ")} is public.`,
+          { source: `${source.owner}/${source.repo}`, publicRepos });
+      }
+    }
+
     // 3. Head of the target branch.
     const baseRef = await getOrNull(client, `${repoPath(target)}/git/ref/heads/${encRef(target.branch)}`);
     if (!baseRef || Array.isArray(baseRef) || !baseRef.object) {

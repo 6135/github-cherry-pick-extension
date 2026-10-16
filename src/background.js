@@ -150,7 +150,8 @@ function codeError(code, message, details) {
 function errorInfo(err) {
   if (!err) return { code: "unknown", message: "Unknown error." };
   if (err.name === "GitHubError") {
-    const code = err.ssoUrl ? "sso_required"
+    const code = err.code ? err.code
+      : err.ssoUrl ? "sso_required"
       : err.status === 401 ? "bad_token"
       : err.rateLimited ? "rate_limited"
       : err.status === 404 ? "not_found"

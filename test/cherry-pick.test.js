@@ -584,3 +584,30 @@ test("fake GitHub returns 404 JSON for unknown paths and objects", async () => {
   const files = await (await fake(`${API}/repos/octo/proj/commits/${fx.f1}`)).json();
   assert.deepEqual(files.files.map((f) => [f.filename, f.status]), [["a.txt", "modified"]]);
 });
+
+// ---------------------------------------------------------------- private to public
+
+test("private source → public target is refused before any write", async () => {
+  const fx = transplantFixture();
+  const repos = { "src/lib": { ...fx.repos["src/lib"], private: true }, "dst/app": fx.repos["dst/app"] };
+  const { client, fake } = fakeFor(repos);
+  await assert.rejects(pick(client, { source: src, shas: [fx.s1], target: { ...dst, branch: "main" } }),
+    (e) => e.code === "private_to_public" && e.details.source === "src/lib" && e.details.publicRepos.join() === "dst/app");
+  assert.deepEqual(fake.writes(), []);
+});
+
+test("private source → public target works with allowPublic", async () => {
+  const fx = transplantFixture();
+  const repos = { "src/lib": { ...fx.repos["src/lib"], private: true }, "dst/app": fx.repos["dst/app"] };
+  const { client } = fakeFor(repos);
+  const result = await pick(client, { source: src, shas: [fx.s1], target: { ...dst, branch: "main" }, allowPublic: true });
+  assert.equal(result.status, "opened");
+});
+
+test("private source → private target needs no consent", async () => {
+  const fx = transplantFixture();
+  const repos = { "src/lib": { ...fx.repos["src/lib"], private: true }, "dst/app": { ...fx.repos["dst/app"], private: true } };
+  const { client } = fakeFor(repos);
+  const result = await pick(client, { source: src, shas: [fx.s1], target: { ...dst, branch: "main" } });
+  assert.equal(result.status, "opened");
+});
