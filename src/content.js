@@ -412,7 +412,10 @@
 
     const notes = [];
     if (commits.note) notes.push(commits.note);
-    if (!st.repo) notes.push("Could not read the repo data. Type the target branch.");
+    if (!st.repo) {
+      const why = rres.error ? ` (${rres.error.code}: ${rres.error.message})` : "";
+      notes.push(`Could not read the repo data${why}. Type the target branch.`);
+    }
     setStatus(notes.join(" "), notes.length > 0);
     validate();
     const first = $(".cp-commit-list input:not(:disabled)") || $("#cp-target");
