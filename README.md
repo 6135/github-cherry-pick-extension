@@ -25,6 +25,7 @@ Required for GitHub Enterprise hosts. Optional for github.com.
 - Merge commits are not supported.
 - Commits that change `.github/workflows/*` are rejected (the token has no `workflow` scope).
 - Commits that are already in the target are skipped.
+- The new commits are not signed, so GitHub does not show them as "Verified". Repos that require signed commits reject them.
 - Cross-repo picks copy the changed files (transplant). Renames on the target side are not detected, so they can give a conflict that `git cherry-pick` would not give.
 - When you cannot push to the target repo, the branch goes to your fork. If you have no fork, the pick fails.
 - CI that runs on `push` to any branch can run on the temporary commit of the new branch.
