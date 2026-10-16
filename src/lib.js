@@ -3,8 +3,8 @@
   "use strict";
 
   // OAuth App client ID for github.com. Public value, not a secret.
-  // Users can override it per host in the settings. Empty means "not set".
-  const DEFAULT_CLIENT_ID = "";
+  // OAuth App "Cherry-Pick for GitHub". Users can override it per host in the settings.
+  const DEFAULT_CLIENT_ID = "Ov23libUbctS0V63dx7v";
 
   const SCOPES = { public: "public_repo", private: "repo" };
 
