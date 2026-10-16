@@ -280,7 +280,7 @@
 
   // State of the dialog. Kept while a job runs, so the user can close and reopen it.
   const st = {
-    seq: 0, running: false, ctx: null, commits: [], repo: null, settings: null,
+    seq: 0, running: false, ctx: null, commits: [], repo: null, settings: null, prBase: null,
     branchEdited: false, titleEdited: false, branchesFor: "", branchCache: new Map(), branchTimer: 0
   };
 
@@ -402,12 +402,14 @@
     st.settings = settings;
     st.repo = rres.ok ? rres.repo : null;
     st.commits = commits.list;
+    // On a PR page, the PR's base branch is the most likely target.
+    st.prBase = ctx.number ? commits.base || null : null;
 
     const preselected = ctx.mode === "commit" ? [ctx.sha] : ctx.selected;
     fillCommitList(orderSelected(st.commits, preselected));
     $("#cp-trailer").checked = settings.trailer;
     $("[data-action=parent]").hidden = !(st.repo && st.repo.parent);
-    setTarget(thisRepoTarget());
+    setTarget(st.prBase || thisRepoTarget());
     $(".cp-main").hidden = false;
     $("[data-action=ok]").hidden = false;
 
@@ -439,7 +441,7 @@
       if (res.ok && res.commits.length) {
         const list = res.commits.map((c) => ({ sha: c.sha.toLowerCase(), message: c.message, parents: c.parents || [] }));
         if (ctx.mode === "commit" && !orderSelected(list, [ctx.sha]).length) list.push(commitFromDom(ctx.sha));
-        return { list };
+        return { list, base: res.base || null };
       }
       if (ctx.mode === "pull") {
         const list = domCommits();
