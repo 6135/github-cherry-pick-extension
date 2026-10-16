@@ -43,4 +43,4 @@ npm run package       # zips in web-ext-artifacts/
 npm run start:firefox # test Firefox profile with the add-on loaded
 ```
 
-Release: push a tag that matches the manifest version, for example `git tag v0.1.0 && git push origin v0.1.0`.
+Release: push a tag that matches the manifest version, for example `git tag v0.1.1 && git push origin v0.1.1`.
