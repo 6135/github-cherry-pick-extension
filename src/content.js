@@ -390,6 +390,7 @@
     if (seq !== st.seq) return;
     if (!sres.ok) return setStatus(sres.error.message, true);
     if (!sres.session) return showLogin(`Log in to ${HOST} to cherry-pick.`);
+    st.publicOnly = !(sres.session.scopes || []).includes("repo");
 
     const source = { owner: ctx.owner, repo: ctx.repo };
     const [settings, rres, commits] = await Promise.all([
@@ -414,7 +415,9 @@
     if (commits.note) notes.push(commits.note);
     if (!st.repo) {
       const why = rres.error ? ` (${rres.error.code}: ${rres.error.message})` : "";
-      notes.push(`Could not read the repo data${why}. Type the target branch.`);
+      const hint = st.publicOnly && rres.error && rres.error.code === "not_found"
+        ? " If this repo is private, select \"Public and private repositories\" in the settings and log in again." : "";
+      notes.push(`Could not read the repo data${why}. Type the target branch.${hint}`);
     }
     setStatus(notes.join(" "), notes.length > 0);
     validate();
@@ -728,6 +731,8 @@
         break;
       case "not_found":
         text = `${error.message && d.sha ? error.message : "Repository, branch or commit not found."} Check the target and your access.`;
+        // GitHub answers 404, not 403, for a private repo the token cannot read.
+        if (st.publicOnly) text += " Your login has access to public repos only. For private repos, select \"Public and private repositories\" in the settings and log in again.";
         break;
       case "rate_limited":
         text = "GitHub API rate limit reached. Wait a few minutes, then try again.";
