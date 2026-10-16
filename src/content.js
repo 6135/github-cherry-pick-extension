@@ -715,6 +715,15 @@
         box.scrollIntoView({ block: "nearest" });
         return;
       }
+      case "private_to_public": {
+        const pub = (d.publicRepos || []).join(" and ") || "the target";
+        text = `${d.source || "The source repo"} is private, but ${pub} is public. ` +
+          "The picked files become public, even if you do not create the pull request.";
+        actions.appendChild(button("Pick anyway (make these changes public)", () => {
+          runPick(Object.assign({}, request, { allowPublic: true }));
+        }));
+        break;
+      }
       case "merge_commit":
         text = `Commit ${short} is a merge commit. Merge commits cannot be cherry-picked here.`;
         break;
@@ -751,9 +760,15 @@
     if (error.code === "branch_exists" || error.code === "bad_branch_name") $("#cp-branch").focus();
   }
 
+  // Links to anything but https pages on this GitHub host show as plain text.
   function link(href, text) {
-    const a = el("a", { href, target: "_blank", rel: "noopener noreferrer", className: "cp-link", text });
-    return a;
+    let ok = false;
+    try {
+      const u = new URL(href);
+      ok = u.protocol === "https:" && u.hostname === HOST;
+    } catch (_) { /* Not a URL. */ }
+    if (!ok) return el("span", { text });
+    return el("a", { href, target: "_blank", rel: "noopener noreferrer", className: "cp-link", text });
   }
 
   function button(text, onClick, primary) {

@@ -26,6 +26,10 @@
       if (token) headers.Authorization = `Bearer ${token}`;
       if (body !== undefined) headers["Content-Type"] = "application/json";
       const url = /^https:\/\//.test(path) ? path : apiBase + path;
+      // Send the token only to the API host. Link headers give absolute URLs.
+      if (new URL(url).origin !== new URL(apiBase).origin) {
+        throw new GitHubError(0, `Refused to send the token to ${new URL(url).origin}.`, { code: "bad_url" });
+      }
 
       for (let attempt = 0; ; attempt++) {
         const res = await doFetch(url, {
@@ -102,7 +106,8 @@
   function toError(res, data) {
     const apiMessage = data && typeof data === "object" && data.message ? data.message : `HTTP ${res.status}`;
     const sso = res.headers.get("x-github-sso");
-    const ssoUrl = sso && /url=(\S+)/.exec(sso) ? /url=(\S+)/.exec(sso)[1] : null;
+    const ssoMatch = sso && /url=(\S+)/.exec(sso);
+    const ssoUrl = ssoMatch && /^https:\/\//i.test(ssoMatch[1]) ? ssoMatch[1] : null;
     return new GitHubError(res.status, apiMessage, {
       apiMessage,
       errors: data && data.errors,

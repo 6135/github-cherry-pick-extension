@@ -59,7 +59,7 @@ function createFakeGitHub(config) {
   const repos = new Map();
   for (const [full, r] of Object.entries((config && config.repos) || {})) {
     const [owner, name] = full.split("/");
-    repos.set(full.toLowerCase(), { owner, name, full, dir: r.dir, push: !!r.push, forkOf: r.fork_of || null });
+    repos.set(full.toLowerCase(), { owner, name, full, dir: r.dir, push: !!r.push, private: !!r.private, forkOf: r.fork_of || null });
   }
   const calls = [];
 
@@ -76,7 +76,7 @@ function createFakeGitHub(config) {
   function repoJson(r) {
     const out = summary(r);
     out.fork = !!r.forkOf;
-    out.private = false;
+    out.private = !!r.private;
     const head = gitRaw(r.dir, ["symbolic-ref", "--short", "HEAD"]);
     out.default_branch = head.status === 0 ? head.stdout.toString().trim() : "main";
     out.permissions = { admin: false, maintain: false, push: r.push, triage: r.push, pull: true };

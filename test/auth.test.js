@@ -201,3 +201,13 @@ test("fetchUser reads login and scopes", async () => {
   assert.equal(noHeader.scopes, null);
   await assert.rejects(A.fetchUser({ host: "github.com", token: "t", fetchImpl: async () => json(401, { message: "Bad credentials" }) }), { code: "bad_token" });
 });
+
+test("requestDeviceCode accepts the device page only on the same host", async () => {
+  const answer = (uri) => async () => json(200, { device_code: "dc", user_code: "U", verification_uri: uri, expires_in: 900, interval: 5 });
+  for (const bad of ["https://evil.example/login/device", "http://github.com/login/device", "javascript:alert(1)"]) {
+    const out = await A.requestDeviceCode({ host: "github.com", clientId: "c", scope: "repo", fetchImpl: answer(bad) });
+    assert.equal(out.verification_uri, "https://github.com/login/device", bad);
+  }
+  const ok = await A.requestDeviceCode({ host: "github.com", clientId: "c", scope: "repo", fetchImpl: answer("https://github.com/login/device?x=1") });
+  assert.equal(ok.verification_uri, "https://github.com/login/device?x=1");
+});
