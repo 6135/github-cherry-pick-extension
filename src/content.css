@@ -1,0 +1,345 @@
+/* Cherry-pick UI. Uses GitHub's CSS variables, with light fallbacks. */
+
+.cp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 12px;
+  font: 500 14px/20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  color: var(--button-default-fgColor-rest, var(--fgColor-default, #1f2328));
+  background: var(--button-default-bgColor-rest, var(--bgColor-muted, #f6f8fa));
+  border: 1px solid var(--button-default-borderColor-rest, var(--borderColor-default, #d1d9e0));
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cp-btn:hover:not(:disabled) {
+  background: var(--button-default-bgColor-hover, var(--bgColor-neutral-muted, #eff2f5));
+}
+
+.cp-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.cp-btn:focus-visible,
+.cp-link-btn:focus-visible,
+.cp-form input:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, var(--fgColor-accent, #0969da));
+  outline-offset: -1px;
+}
+
+.cp-btn-primary {
+  color: var(--button-primary-fgColor-rest, #fff);
+  background: var(--button-primary-bgColor-rest, #1f883d);
+  border-color: var(--button-primary-borderColor-rest, rgba(31, 35, 40, 0.15));
+}
+
+.cp-btn-primary:hover:not(:disabled) {
+  background: var(--button-primary-bgColor-hover, #1c8139);
+}
+
+.cp-btn[hidden],
+.cp-link-btn[hidden],
+.cp-dialog [hidden] {
+  display: none;
+}
+
+/* Commit page: in the header row, before "Browse files". */
+.cp-inline {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Commit page fallback when the header is not found. */
+.cp-floating {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 100;
+  box-shadow: var(--shadow-floating-small, 0 1px 3px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(66, 74, 83, 0.12));
+}
+
+/* PR commits page: checkbox at the start of each commit row. */
+.cp-row-check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  align-self: center;
+  margin: 0 8px 0 0;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.cp-row-check input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--fgColor-accent, #0969da);
+}
+
+.cp-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px 16px;
+  transform: translateX(-50%);
+  font: 14px/20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  color: var(--fgColor-default, #1f2328);
+  background: var(--overlay-bgColor, var(--bgColor-default, #fff));
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 12px;
+  box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(0, 0, 0, 0.2));
+}
+
+.cp-bar-count {
+  margin-right: 4px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Dialog */
+.cp-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  padding: 0;
+  color: var(--fgColor-default, #1f2328);
+  background: var(--overlay-bgColor, var(--bgColor-default, #fff));
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 12px;
+  box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(0, 0, 0, 0.2));
+}
+
+.cp-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.cp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  font: 14px/20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+.cp-heading {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cp-main,
+.cp-login {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cp-login p {
+  margin: 0;
+}
+
+.cp-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.cp-fieldset legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-weight: 500;
+}
+
+.cp-commit-list {
+  max-height: 200px;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+}
+
+.cp-commit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+}
+
+.cp-commit input {
+  flex: none;
+  margin: 0;
+  accent-color: var(--fgColor-accent, #0969da);
+}
+
+.cp-commit label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cp-commit input:disabled + label {
+  color: var(--fgColor-muted, #59636e);
+  cursor: default;
+}
+
+.cp-commit-list > .cp-muted {
+  padding: 2px 8px;
+}
+
+.cp-sha {
+  font: 12px/20px ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--fgColor-muted, #59636e);
+}
+
+.cp-chip {
+  flex: none;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--fgColor-attention, #9a6700);
+  border: 1px solid var(--borderColor-attention-emphasis, #bf8700);
+  border-radius: 999px;
+}
+
+.cp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cp-field > label {
+  font-weight: 500;
+}
+
+.cp-form input[type="text"] {
+  height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  color: inherit;
+  background: var(--bgColor-default, #fff);
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+}
+
+.cp-form input[type="text"]:disabled {
+  color: var(--fgColor-disabled, #818b98);
+  background: var(--bgColor-disabled, #eff2f5);
+}
+
+.cp-form input[aria-invalid="true"] {
+  border-color: var(--borderColor-danger-emphasis, #cf222e);
+}
+
+.cp-quick {
+  display: flex;
+  gap: 12px;
+}
+
+.cp-link-btn {
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--fgColor-accent, #0969da);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.cp-link-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.cp-link-btn:disabled {
+  color: var(--fgColor-muted, #59636e);
+  cursor: default;
+}
+
+.cp-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.cp-check input {
+  margin: 0;
+  accent-color: var(--fgColor-accent, #0969da);
+}
+
+.cp-status {
+  min-height: 20px;
+  margin: 0;
+  color: var(--fgColor-muted, #59636e);
+  overflow-wrap: anywhere;
+}
+
+.cp-status.cp-error {
+  color: var(--fgColor-danger, #d1242f);
+}
+
+.cp-status:empty {
+  min-height: 0;
+}
+
+.cp-result:empty {
+  display: none;
+}
+
+.cp-result p {
+  margin: 0 0 8px;
+}
+
+.cp-muted {
+  color: var(--fgColor-muted, #59636e);
+}
+
+.cp-link {
+  color: var(--fgColor-accent, #0969da);
+  overflow-wrap: anywhere;
+}
+
+.cp-skipped {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.cp-pre {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  font: 12px/18px ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  white-space: pre;
+  color: var(--fgColor-default, #1f2328);
+  background: var(--bgColor-muted, #f6f8fa);
+  border: 1px solid var(--borderColor-default, #d1d9e0);
+  border-radius: 6px;
+  user-select: text;
+}
+
+.cp-actions,
+.cp-actions-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cp-actions {
+  justify-content: flex-end;
+}

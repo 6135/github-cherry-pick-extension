@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cherry-Pick settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <h1>Cherry-Pick settings</h1>
+
+  <h2>GitHub accounts</h2>
+  <p class="hint">Each host has its own login. The token stays in this browser. Only the extension background and its pages use it.</p>
+  <div id="hosts"></div>
+
+  <h2>Add a GitHub Enterprise Server host</h2>
+  <div class="row">
+    <input id="newHost" class="grow" type="text" placeholder="github.example.com" aria-label="GitHub Enterprise host" spellcheck="false">
+    <button id="addHost" type="button">Add</button>
+  </div>
+  <p class="hint">The browser asks for access to this host. The extension needs it to show the Cherry-pick button and to log in.</p>
+  <p id="addStatus" class="status" role="status"></p>
+
+  <h2>Cherry-pick</h2>
+  <label class="inline"><input id="trailer" type="checkbox"> Add a "(cherry picked from commit …)" line to each commit message</label>
+  <label>Maximum changed files per commit
+    <input id="maxFiles" type="number" min="1" max="3000" step="1">
+    <span class="hint">Commits with more changed files are not picked.</span>
+  </label>
+  <p id="settingsStatus" class="status" role="status"></p>
+
+  <template id="hostTemplate">
+    <section class="host">
+      <div class="host-head">
+        <h3 class="name"></h3>
+        <button class="remove danger" type="button">Remove host</button>
+      </div>
+
+      <label>OAuth App client ID
+        <span class="row">
+          <input class="clientId grow" type="text" spellcheck="false" autocomplete="off">
+          <button class="reset" type="button">Reset</button>
+        </span>
+        <span class="hint clientHint"></span>
+      </label>
+
+      <fieldset>
+        <legend>Access</legend>
+        <label class="inline"><input class="scope" type="radio" value="public_repo"> Public repositories only</label>
+        <label class="inline"><input class="scope" type="radio" value="repo"> Public and private repositories</label>
+        <p class="warn repoWarn" hidden>With this access, the token can read and change all private repositories that your account can see.</p>
+      </fieldset>
+
+      <div class="row">
+        <button class="save primary" type="button" disabled>Save changes</button>
+        <span class="saveHint hint"></span>
+      </div>
+      <p class="status saveStatus" role="status"></p>
+
+      <p class="session"></p>
+      <div class="row">
+        <button class="login" type="button">Log in</button>
+        <button class="logout" type="button">Log out</button>
+        <a class="revoke" target="_blank" rel="noopener">Revoke on GitHub</a>
+      </div>
+      <p class="hint logoutHint">Log out deletes the token from this browser. To also cancel it on GitHub, use "Revoke on GitHub".</p>
+
+      <details>
+        <summary>Use your own OAuth App</summary>
+        <ol>
+          <li><a class="newApp" target="_blank" rel="noopener">Register a new OAuth App</a>.</li>
+          <li>Turn on <strong>Enable Device Flow</strong>.</li>
+          <li>For the homepage URL and the callback URL, you can use any URL. The extension does not use them.</li>
+          <li>Copy the client ID of the app and paste it in the field above. Do not create a client secret: the extension does not need one.</li>
+        </ol>
+      </details>
+    </section>
+  </template>
+
+  <script src="lib.js"></script>
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+  <script src="hosts.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

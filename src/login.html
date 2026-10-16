@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log in to GitHub - Cherry-Pick</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body class="login">
+  <h1 id="title">Log in to GitHub</h1>
+
+  <div id="noClient" hidden>
+    <p id="noClientText"></p>
+    <p><a href="#" id="openOptions">Open the settings</a></p>
+  </div>
+
+  <div id="noAccess" hidden>
+    <p id="noAccessText"></p>
+    <button id="grant" type="button" class="primary">Grant access</button>
+  </div>
+
+  <div id="flow" hidden>
+    <p>1. Copy this code:</p>
+    <div id="code" class="code" aria-label="Login code">&nbsp;</div>
+    <p>2. Paste it on the GitHub page and approve the access.</p>
+    <div class="row">
+      <button id="copyOpen" type="button" class="primary" disabled>Copy code and open GitHub</button>
+    </div>
+    <p class="hint" id="uriHint"></p>
+  </div>
+
+  <p id="status" class="status" role="status" aria-live="polite"></p>
+  <div class="row">
+    <button id="retry" type="button" hidden>Try again</button>
+    <a href="#" id="settingsLink" hidden>Open the settings</a>
+  </div>
+
+  <script src="lib.js"></script>
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

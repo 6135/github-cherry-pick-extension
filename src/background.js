@@ -8,6 +8,7 @@
 //                                                         parent: {owner, repo, defaultBranch} | null, canPush } }
 //   { type: "branches", host, owner, repo }           → { branches: ["main", ...] } (up to 1000)
 //   { type: "pullCommits", host, owner, repo, number } → { commits: [{ sha, message, parents }] } (oldest first)
+//   { type: "commit", host, owner, repo, sha }        → { commit: { sha, message, parents } }
 //
 // Long job (chrome.runtime.connect({ name: "pick" })). The open port keeps the worker alive.
 //   content → { type: "start", request }   request: see CpCore.runPick in cherry-pick.js
@@ -25,6 +26,12 @@ const L = globalThis.CpLib;
 
 chrome.runtime.onInstalled.addListener(() => { CpHosts.syncContentScripts().catch(logError); });
 chrome.runtime.onStartup.addListener(() => { CpHosts.syncContentScripts().catch(logError); });
+// The user can grant or remove host access in the browser settings too.
+chrome.permissions.onAdded.addListener(() => { CpHosts.syncContentScripts().catch(logError); });
+chrome.permissions.onRemoved.addListener(() => { CpHosts.syncContentScripts().catch(logError); });
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local" && changes.hosts) CpHosts.syncContentScripts().catch(logError);
+});
 
 chrome.action.onClicked.addListener(() => chrome.runtime.openOptionsPage());
 
@@ -72,6 +79,12 @@ const HANDLERS = {
     const client = await clientFor(hostOf(msg));
     const list = await client.paginate(`/repos/${enc(msg.owner)}/${enc(msg.repo)}/branches?per_page=100`, { maxPages: 10 });
     return { branches: list.map((b) => b.name) };
+  },
+
+  async commit(msg) {
+    const client = await clientFor(hostOf(msg));
+    const c = await client.get(`/repos/${enc(msg.owner)}/${enc(msg.repo)}/commits/${enc(msg.sha)}?per_page=1`);
+    return { commit: { sha: c.sha, message: c.commit.message, parents: c.parents.map((p) => p.sha) } };
   },
 
   async pullCommits(msg) {
