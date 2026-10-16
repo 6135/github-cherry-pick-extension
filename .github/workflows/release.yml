@@ -1,0 +1,66 @@
+name: Release
+
+# Push a tag that matches manifest.json "version", for example:
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Check that the tag matches the manifest version
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match manifest version ${version}. Use tag v${version}."
+            exit 1
+          fi
+          echo "VERSION=${version}" >> "$GITHUB_ENV"
+
+      - name: Test
+        run: npm test
+
+      - name: Lint (Firefox)
+        run: npm run lint -- --warnings-as-errors
+
+      - name: Package (Chromium zip, unsigned Firefox zip)
+        run: npm run package
+
+      # Off by default. To sign, set the repository variable SIGN_FIREFOX to "true"
+      # and add the AMO_JWT_ISSUER and AMO_JWT_SECRET secrets.
+      - name: Sign for Firefox (unlisted, addons.mozilla.org)
+        if: vars.SIGN_FIREFOX == 'true'
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          if [ -z "$WEB_EXT_API_KEY" ] || [ -z "$WEB_EXT_API_SECRET" ]; then
+            echo "::error::Add the AMO_JWT_ISSUER and AMO_JWT_SECRET repository secrets."
+            exit 1
+          fi
+          npm run sign:firefox -- --approval-timeout 900000
+          xpi=$(ls web-ext-artifacts/*.xpi | head -n 1)
+          mv "$xpi" "web-ext-artifacts/cherry-pick-${VERSION}-firefox.xpi"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          firefox="web-ext-artifacts/cherry-pick-${VERSION}-firefox.xpi"
+          [ -f "$firefox" ] || firefox="web-ext-artifacts/cherry-pick-${VERSION}-firefox-unsigned.zip"
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "Cherry-Pick ${VERSION}" \
+            --generate-notes \
+            "$firefox" \
+            "web-ext-artifacts/cherry-pick-${VERSION}-chromium.zip"

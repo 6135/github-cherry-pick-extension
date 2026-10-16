@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub Cherry-Pick",
+  "version": "0.1.0",
+  "description": "Cherry-pick commits on GitHub from the web UI. Opens a pull request with the result.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://api.github.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "scripts": [
+      "src/lib.js",
+      "src/api.js",
+      "src/auth.js",
+      "src/hosts.js",
+      "src/cherry-pick.js",
+      "src/background.js"
+    ]
+  },
+  "action": {
+    "default_title": "Cherry-Pick settings",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://github.com/*"
+      ],
+      "js": [
+        "src/lib.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": {
+    "page": "src/options.html",
+    "open_in_tab": true
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "cherry-pick@6135.github.io",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "github-cherry-pick-extension",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "lint": "npm run build && npx --yes web-ext@10.8.0 lint --source-dir dist/firefox",
+    "start:firefox": "npm run build && npx --yes web-ext@10.8.0 run --source-dir dist/firefox --start-url https://github.com",
+    "package": "npm run build && npx --yes web-ext@10.8.0 build --source-dir dist/chromium --artifacts-dir web-ext-artifacts --filename cherry-pick-{version}-chromium.zip --overwrite-dest && npx --yes web-ext@10.8.0 build --source-dir dist/firefox --artifacts-dir web-ext-artifacts --filename cherry-pick-{version}-firefox-unsigned.zip --overwrite-dest",
+    "sign:firefox": "npm run build && npx --yes web-ext@10.8.0 sign --source-dir dist/firefox --artifacts-dir web-ext-artifacts --channel unlisted"
+  }
+}
